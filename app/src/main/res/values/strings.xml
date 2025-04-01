@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">SimpleLauncher</string>
+    <string name="notification_listener_service_label">Notification Listener</string>
+</resources>
