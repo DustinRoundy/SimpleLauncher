@@ -24,3 +24,11 @@ This project is a custom built Android Launcher built for Flip Phones and takes 
 - Pressing the back button too many times will restart the launcher
 - Some apps listed in the menu will launch the previous launcher (Vortex V3 specific issue)
 - Some notifications do not display correctly
+
+## Tested Devices:
+| Device | Buttons | Notifications | Other issues |
+| :----- | :-----: | :-----------: | :----------- |
+| Vortex V3 | ✅ | ✅ | Known Bugs |
+| Olitech EasyFlipSmart | ❌ | ❌ | Buttons do not correctly identify |
+| Doro 731x | ? | ? | Launcher needs to be replaced, unable to test further |
+
