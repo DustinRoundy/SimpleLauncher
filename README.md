@@ -32,3 +32,10 @@ This project is a custom built Android Launcher built for Flip Phones and takes 
 | Olitech EasyFlipSmart | ❌ | ❌ | Buttons do not correctly identify |
 | Doro 731x | ? | ? | Launcher needs to be replaced, unable to test further |
 
+## Notification Access by ADB:
+Some devices (mainly devices running Android Go with the Low Memory flag) seem to have removed the ability to grant notification access on the device itself. This usually presents with a screen that reads "This function is not available on this device". If you run into this issue, please run the following ADB command to grant notification access.
+
+``
+adb shell cmd notification allow_listener com.example.simplelauncher/com.example.simplelauncher.MyNotificationListener
+``
+
