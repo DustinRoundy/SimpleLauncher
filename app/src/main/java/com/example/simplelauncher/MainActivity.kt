@@ -1,11 +1,8 @@
 package com.example.simplelauncher
 
-import android.app.Activity
-import android.app.Notification
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
-import android.icu.util.Calendar
 import android.net.Uri
 import androidx.compose.foundation.Image
 import android.os.Build
@@ -16,6 +13,8 @@ import android.provider.Settings
 import android.text.format.DateUtils
 import android.util.Log
 import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuInflater
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -34,12 +33,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.layout.WindowInsets as layoutWindowInsets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,12 +46,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -66,63 +59,26 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.tv.material3.ExperimentalTvMaterial3Api
 import com.example.simplelauncher.ui.theme.SimpleLauncherTheme
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 import android.view.View
 import android.view.WindowInsets
-import android.view.WindowInsetsController
-import android.widget.TextClock
-import androidx.activity.compose.BackHandler
-import androidx.annotation.RequiresApi
+import android.widget.Toast
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Card
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 //import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.key
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.window.Popup
-import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import androidx.datastore.core.DataStore
-import java.time.Clock
-import java.time.Instant
-import java.time.LocalDateTime
-import java.util.prefs.Preferences
 import androidx.core.net.toUri
 
 //val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -138,11 +94,13 @@ class MainActivity : ComponentActivity() {
                 MyNotificationListener.openNotificationAccessSettings(this)
             }
             SimpleLauncherTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(modifier = Modifier.fillMaxSize(), containerColor = Color.Transparent) { innerPadding ->
                     LauncherScreen(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding).background(Color.Transparent)
                     )
                 }
+
+
             }
         }
 //        WindowInsetsControllerCompat(window, window.decorView).apply {
@@ -151,6 +109,11 @@ class MainActivity : ComponentActivity() {
 //            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 //        }
     }
+//    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+//        val inflater: MenuInflater = menuInflater
+//        inflater.inflate(R.menu.options, menu)
+//        return true
+//    }
 }
 
 sealed class LauncherPage {
@@ -194,13 +157,14 @@ fun LauncherScreen(modifier: Modifier) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color.Transparent)
     ){
-        Image(
-            painter = painterResource(R.drawable.glow),
-            contentDescription = null, // Or provide a meaningful description
-            modifier = Modifier.matchParentSize(),
-            contentScale = ContentScale.Crop // Or use other content scales as needed
-        )
+//        Image(
+//            painter = painterResource(R.drawable.glow),
+//            contentDescription = null, // Or provide a meaningful description
+//            modifier = Modifier.matchParentSize(),
+//            contentScale = ContentScale.Crop // Or use other content scales as needed
+//        )
         Column(modifier = modifier
             .fillMaxSize()
             .focusable()
@@ -209,12 +173,16 @@ fun LauncherScreen(modifier: Modifier) {
                     return@onPreviewKeyEvent true
                 }
 //            println(keyEvent.nativeKeyEvent.keyCode)
+//                Toast.makeText(context, "Key: ${keyEvent.nativeKeyEvent.keyCode}", Toast.LENGTH_SHORT).show()
+                Log.d("KeyEvent", "Key: ${keyEvent.nativeKeyEvent.keyCode}")
                 when (keyEvent.nativeKeyEvent.keyCode) {
                     KeyEvent.KEYCODE_DPAD_LEFT -> {
                         if (keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_DOWN && !isKeyEventProcessing) {
                             isKeyEventProcessing = true
                             when (currentPage) {
-                                LauncherPage.MainPage -> currentPage = LauncherPage.NotificationsPage
+                                LauncherPage.MainPage -> currentPage =
+                                    LauncherPage.NotificationsPage
+
                                 LauncherPage.AppsPage -> currentPage = LauncherPage.MainPage
                                 else -> true
                             }
@@ -233,7 +201,9 @@ fun LauncherScreen(modifier: Modifier) {
                             isKeyEventProcessing = true
                             when (currentPage) {
                                 LauncherPage.MainPage -> currentPage = LauncherPage.AppsPage
-                                LauncherPage.NotificationsPage -> currentPage = LauncherPage.MainPage
+                                LauncherPage.NotificationsPage -> currentPage =
+                                    LauncherPage.MainPage
+
                                 else -> true
                             }
                             isKeyEventProcessing = false
@@ -298,43 +268,43 @@ fun NotificationsPage() {
                     .fillMaxWidth()
                     .focusRequester(focusRequester)
                     .focusable()
-                .onKeyEvent { keyEvent ->
-                if (keyEvent.type == KeyEventType.KeyDown) {
-                    when (keyEvent.key) {
-                        Key.DirectionDown -> {
-                            if (selectedIndex < currentNotifications.size - 1) {
-                                selectedIndex++
+                    .onKeyEvent { keyEvent ->
+                        if (keyEvent.type == KeyEventType.KeyDown) {
+                            when (keyEvent.key) {
+                                Key.DirectionDown -> {
+                                    if (selectedIndex < currentNotifications.size - 1) {
+                                        selectedIndex++
 //                                Toast.makeText(context, "Down", Toast.LENGTH_SHORT).show()
-                            }
-                            true
-                        }
-
-                        Key.DirectionUp -> {
-                            if (selectedIndex > 0) {
-                                selectedIndex--
-                                println(selectedIndex)
-//                                Toast.makeText(context, "Up", Toast.LENGTH_SHORT).show()
-                            }
-                            true
-                        }
-
-                        Key.DirectionCenter -> {
-                            if (currentNotifications.isNotEmpty()) {
-                                try {
-                                    currentNotifications[selectedIndex].contentIntent?.send()
-                                } catch (e: Exception) {
-                                    println(e)
+                                    }
+                                    true
                                 }
-                            }
-                            true
-                        }
 
-                        else -> false
-                    }
-                } else {
-                    false
-                }
-            },
+                                Key.DirectionUp -> {
+                                    if (selectedIndex > 0) {
+                                        selectedIndex--
+                                        println(selectedIndex)
+//                                Toast.makeText(context, "Up", Toast.LENGTH_SHORT).show()
+                                    }
+                                    true
+                                }
+
+                                Key.DirectionCenter -> {
+                                    if (currentNotifications.isNotEmpty()) {
+                                        try {
+                                            currentNotifications[selectedIndex].contentIntent?.send()
+                                        } catch (e: Exception) {
+                                            println(e)
+                                        }
+                                    }
+                                    true
+                                }
+
+                                else -> false
+                            }
+                        } else {
+                            false
+                        }
+                    },
                 state = listState,
             ) {
                 itemsIndexed(currentNotifications
@@ -345,6 +315,7 @@ fun NotificationsPage() {
                                             if (index == selectedIndex) Color.DarkGray.copy(0.6f) else
                                                 Color.Transparent
                                         )
+                            .fillMaxWidth()
 //                            .focusRequester(focusRequester)
 //                            .focusable()
 //                            .clickable {
@@ -395,6 +366,7 @@ fun NotificationsPage() {
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainPage(modifier: Modifier, apps: List<AppInfo>) {
     val context = LocalContext.current
@@ -406,6 +378,7 @@ fun MainPage(modifier: Modifier, apps: List<AppInfo>) {
     var tabWidth by remember { mutableStateOf(0.dp) }
     val mediaList = MyNotificationListener.currentMedia
     val mediaItem = MyNotificationListener.currentPlayback
+    var mDisplayMenu by remember { mutableStateOf(false) }
 //    Log.d(mediaList.toString(), "MainPage: ")
 //    if (mediaList.isNotEmpty()) {
 //        Log.d("MediaList", "MainPage: $mediaList")
@@ -419,6 +392,8 @@ fun MainPage(modifier: Modifier, apps: List<AppInfo>) {
         currentTimeMillis = System.currentTimeMillis()
         delay(6000)
     }
+
+
 
     Column(
         modifier = Modifier
@@ -455,7 +430,7 @@ fun MainPage(modifier: Modifier, apps: List<AppInfo>) {
             state = listState,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = if(mediaItem.value.isPlaying) 0.dp else 36.dp)
+                .padding(top = if (mediaItem.value.isPlaying) 0.dp else 36.dp)
                 .focusRequester(focusRequester)
                 .focusable()
                 .onKeyEvent { keyEvent ->
@@ -485,48 +460,63 @@ fun MainPage(modifier: Modifier, apps: List<AppInfo>) {
                                 true
                             }
 
-                            else ->  {
+                            else -> {
                                 when (keyEvent.nativeKeyEvent.keyCode) {
                                     KeyEvent.KEYCODE_0 -> {
 //                                        vibrate(context)
                                         launchDialer("0", context)
                                     }
+
                                     KeyEvent.KEYCODE_1 -> {
 //                                        vibrate(context)
                                         launchDialer("1", context)
                                     }
+
                                     KeyEvent.KEYCODE_2 -> {
 //                                        vibrate(context)
                                         launchDialer("2", context)
                                     }
+
                                     KeyEvent.KEYCODE_3 -> {
 //                                        vibrate(context)
                                         launchDialer("3", context)
                                     }
+
                                     KeyEvent.KEYCODE_4 -> {
 //                                        vibrate(context)
                                         launchDialer("4", context)
                                     }
+
                                     KeyEvent.KEYCODE_5 -> {
 //                                        vibrate(context)
                                         launchDialer("5", context)
                                     }
+
                                     KeyEvent.KEYCODE_6 -> {
 //                                        vibrate(context)
                                         launchDialer("6", context)
                                     }
+
                                     KeyEvent.KEYCODE_7 -> {
 //                                        vibrate(context)
                                         launchDialer("7", context)
                                     }
+
                                     KeyEvent.KEYCODE_8 -> {
 //                                        vibrate(context)
                                         launchDialer("8", context)
                                     }
+
                                     KeyEvent.KEYCODE_9 -> {
 //                                        vibrate(context)
                                         launchDialer("9", context)
                                     }
+                                    KeyEvent.KEYCODE_POUND -> {
+                                        vibrate(context)
+//                                        Toast.makeText(context, "Pound", Toast.LENGTH_SHORT).show()
+                                    }
+
+
 
 //                                    else -> {
 //                                        false
@@ -758,6 +748,11 @@ fun AppsPage(modifier: Modifier, apps: List<AppInfo>, lazyListState: LazyListSta
                                 true
                             }
 
+                            Key.Menu -> {
+                                isMenuExpanded = true
+                                true
+                            }
+
                             else -> false
                         }
                     } else if (KeyEvent.type == KeyEventType.KeyUp) {
@@ -933,6 +928,7 @@ fun AppsPage(modifier: Modifier, apps: List<AppInfo>, lazyListState: LazyListSta
             if(isHoldingDown) {
                 isLongPress = true
                 println("long press")
+                Log.d("SimpleLauncher", "long press: ${apps[selectedIndex].packageName}")
                 vibrate(context)
 //                delay(100)
 //                isMenuExpanded = true
@@ -1093,7 +1089,9 @@ fun MediaItem(mediaData: MediaData, modifier: Modifier = Modifier) {
                     Image(
                         painter = rememberDrawablePainter(drawable = mediaData.albumArt),
                         contentDescription = mediaData.title,
-                        modifier = Modifier.size(88.dp).padding(4.dp)
+                        modifier = Modifier
+                            .size(88.dp)
+                            .padding(4.dp)
                     )
                 }
                 Column {
