@@ -289,7 +289,7 @@ fun LauncherScreen(currentPage: LauncherPage, onPageChange: (LauncherPage) -> Un
             }
         ) {
             when (currentPage) {
-                LauncherPage.NotificationsPage -> NotificationsPage()
+                LauncherPage.NotificationsPage -> NotificationsPage(onNavigateBack = {onPageChange(LauncherPage.MainPage)})
                 LauncherPage.MainPage -> MainPage(modifier, savedApps)
                 LauncherPage.AppsPage -> {
                     AppsPage(modifier, apps, lazyListState, focusManager, savedApps, onSavedAppsChange = {newSavedApps -> savedApps = newSavedApps}, onNavigateBack = {onPageChange(LauncherPage.MainPage)})
@@ -302,7 +302,7 @@ fun LauncherScreen(currentPage: LauncherPage, onPageChange: (LauncherPage) -> Un
 }
 
 @Composable
-fun NotificationsPage() {
+fun NotificationsPage(onNavigateBack: () -> Unit) {
     val focusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
     var selectedIndex by remember { mutableStateOf(0) }
@@ -363,6 +363,12 @@ fun NotificationsPage() {
                                     println(e)
                                 }
                             }
+                            true
+                        }
+
+                        Key.Back -> {
+//                            focusManager.clearFocus()
+                            onNavigateBack()
                             true
                         }
 
