@@ -19,6 +19,7 @@ import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
@@ -128,6 +129,14 @@ import androidx.core.net.toUri
 //val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 class MainActivity : ComponentActivity() {
+
+    private var homeScreenTrigger = mutableStateOf(0)
+    private var stateOfPage = mutableStateOf<LauncherPage>(LauncherPage.MainPage)
+
+//    fun onPageChange(LauncherPage:LauncherPage) {
+//        stateOfPage.value = LauncherPage
+//    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -138,8 +147,12 @@ class MainActivity : ComponentActivity() {
                 MyNotificationListener.openNotificationAccessSettings(this)
             }
             SimpleLauncherTheme {
+                val triggerValue by remember {homeScreenTrigger}
+                var currentPage by remember {stateOfPage}
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     LauncherScreen(
+                        currentPage = currentPage,
+                        onPageChange = { launcherPage:LauncherPage -> currentPage = launcherPage },
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -150,6 +163,14 @@ class MainActivity : ComponentActivity() {
 //            hide(WindowInsetsCompat.Type.navigationBars())
 //            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 //        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)){
+            stateOfPage.value = LauncherPage.MainPage
+        }
+
     }
 }
 
@@ -175,9 +196,8 @@ fun vibrate(context:Context) {
 }
 
 @Composable
-fun LauncherScreen(modifier: Modifier) {
+fun LauncherScreen(currentPage: LauncherPage, onPageChange: (LauncherPage) -> Unit, modifier: Modifier) {
     val focusRequester = remember { FocusRequester() }
-    var currentPage by remember {mutableStateOf<LauncherPage>(LauncherPage.MainPage)}
     var isKeyEventProcessing by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val apps by remember { mutableStateOf(GetAllInstalledApps(context)) }
@@ -185,12 +205,29 @@ fun LauncherScreen(modifier: Modifier) {
     val lazyListState = rememberLazyListState()
     val focusManager = LocalFocusManager.current
 
+//    LaunchedEffect(homeScreenSignal) {
+//        if (homeScreenSignal > 0) {
+//            currentPage = LauncherPage.MainPage
+//        }
+//    }
 //    LaunchedEffect(currentPage) {
 //        if (currentPage == LauncherPage.AppsPage) {
 //            delay(100)
 //            focusRequester.requestFocus()
 //        }
 //    }
+
+    BackHandler(enabled = true) {
+        when (currentPage) {
+            LauncherPage.MainPage -> {
+                println("on main page. Consuming press")
+            }
+            else -> {
+                onPageChange(LauncherPage.MainPage)
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -214,8 +251,8 @@ fun LauncherScreen(modifier: Modifier) {
                         if (keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_DOWN && !isKeyEventProcessing) {
                             isKeyEventProcessing = true
                             when (currentPage) {
-                                LauncherPage.MainPage -> currentPage = LauncherPage.NotificationsPage
-                                LauncherPage.AppsPage -> currentPage = LauncherPage.MainPage
+                                LauncherPage.MainPage -> onPageChange(LauncherPage.NotificationsPage)
+                                LauncherPage.AppsPage -> onPageChange(LauncherPage.MainPage)
                                 else -> true
                             }
                             isKeyEventProcessing = false
@@ -232,8 +269,8 @@ fun LauncherScreen(modifier: Modifier) {
                         if (keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_DOWN && !isKeyEventProcessing) {
                             isKeyEventProcessing = true
                             when (currentPage) {
-                                LauncherPage.MainPage -> currentPage = LauncherPage.AppsPage
-                                LauncherPage.NotificationsPage -> currentPage = LauncherPage.MainPage
+                                LauncherPage.MainPage -> onPageChange(LauncherPage.AppsPage)
+                                LauncherPage.NotificationsPage -> onPageChange(LauncherPage.MainPage)
                                 else -> true
                             }
                             isKeyEventProcessing = false
@@ -252,10 +289,10 @@ fun LauncherScreen(modifier: Modifier) {
             }
         ) {
             when (currentPage) {
-                LauncherPage.NotificationsPage -> NotificationsPage()
+                LauncherPage.NotificationsPage -> NotificationsPage(onNavigateBack = {onPageChange(LauncherPage.MainPage)})
                 LauncherPage.MainPage -> MainPage(modifier, savedApps)
                 LauncherPage.AppsPage -> {
-                    AppsPage(modifier, apps, lazyListState, focusManager, savedApps, onSavedAppsChange = {newSavedApps -> savedApps = newSavedApps})
+                    AppsPage(modifier, apps, lazyListState, focusManager, savedApps, onSavedAppsChange = {newSavedApps -> savedApps = newSavedApps}, onNavigateBack = {onPageChange(LauncherPage.MainPage)})
 //                focusManager.moveFocus(FocusDirection.Next)
                 }
             }
@@ -265,7 +302,7 @@ fun LauncherScreen(modifier: Modifier) {
 }
 
 @Composable
-fun NotificationsPage() {
+fun NotificationsPage(onNavigateBack: () -> Unit) {
     val focusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
     var selectedIndex by remember { mutableStateOf(0) }
@@ -326,6 +363,12 @@ fun NotificationsPage() {
                                     println(e)
                                 }
                             }
+                            true
+                        }
+
+                        Key.Back -> {
+//                            focusManager.clearFocus()
+                            onNavigateBack()
                             true
                         }
 
@@ -701,7 +744,7 @@ fun MainPage(modifier: Modifier, apps: List<AppInfo>) {
 //@OptIn(ExperimentalTvMaterial3Api::class, ExperimentalMaterial3Api::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppsPage(modifier: Modifier, apps: List<AppInfo>, lazyListState: LazyListState, focusManager: FocusManager, savedApps: List<AppInfo>, onSavedAppsChange: (List<AppInfo>) -> Unit) {
+fun AppsPage(modifier: Modifier, apps: List<AppInfo>, lazyListState: LazyListState, focusManager: FocusManager, savedApps: List<AppInfo>, onSavedAppsChange: (List<AppInfo>) -> Unit, onNavigateBack: ()->Unit) {
     val focusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
     var selectedIndex by remember { mutableStateOf(0) }
@@ -715,6 +758,11 @@ fun AppsPage(modifier: Modifier, apps: List<AppInfo>, lazyListState: LazyListSta
 //    val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
+
+    BackHandler(enabled = true) {
+        focusManager.clearFocus()
+        onNavigateBack()
+    }
 
     Box (
         modifier = Modifier.fillMaxSize(),
@@ -755,6 +803,14 @@ fun AppsPage(modifier: Modifier, apps: List<AppInfo>, lazyListState: LazyListSta
 //                                onAppClick(context, apps[selectedIndex])
                                 isHoldingDown = true
 //                                isLongPress = false
+                                true
+                            }
+
+                            Key.Back -> {
+                                if (!isMenuExpanded) {
+                                    focusManager.clearFocus()
+                                    onNavigateBack()
+                                }
                                 true
                             }
 
